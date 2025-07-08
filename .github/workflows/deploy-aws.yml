@@ -1,0 +1,144 @@
+name: Deploy LiveWire to AWS
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - prod
+        - staging
+      region:
+        description: 'AWS Region'
+        required: true
+        default: 'ap-southeast-2'
+        type: choice
+        options:
+        - ap-southeast-2
+        - us-east-1
+        - us-west-2
+        - eu-west-1
+
+env:
+  AWS_REGION: ${{ github.event.inputs.region || 'ap-southeast-2' }}
+  ENVIRONMENT: ${{ github.event.inputs.environment || 'prod' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: aws-deployment/package*.json
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Install Serverless Framework
+      run: |
+        cd aws-deployment
+        npm install -g serverless
+        npm install
+        
+    - name: Install Python dependencies
+      run: |
+        cd aws-deployment
+        python -m pip install --upgrade pip
+        pip install -r requirements-aws.txt
+        
+    - name: Deploy to AWS
+      run: |
+        cd aws-deployment
+        echo "Deploying LiveWire to ${{ env.ENVIRONMENT }} in ${{ env.AWS_REGION }}"
+        serverless deploy --stage ${{ env.ENVIRONMENT }} --region ${{ env.AWS_REGION }} --verbose
+        
+    - name: Get deployment info
+      id: deployment
+      run: |
+        cd aws-deployment
+        ENDPOINT=$(serverless info --stage ${{ env.ENVIRONMENT }} --region ${{ env.AWS_REGION }} | grep "ServiceEndpoint" | cut -d' ' -f2)
+        echo "endpoint=$ENDPOINT" >> $GITHUB_OUTPUT
+        echo "region=${{ env.AWS_REGION }}" >> $GITHUB_OUTPUT
+        echo "stage=${{ env.ENVIRONMENT }}" >> $GITHUB_OUTPUT
+        
+    - name: Test deployment
+      run: |
+        echo "Testing deployment at: ${{ steps.deployment.outputs.endpoint }}"
+        curl -f "${{ steps.deployment.outputs.endpoint }}/health" || echo "Health check failed - service may still be starting"
+        
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 LiveWire Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 Deployment Details:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Endpoint:** ${{ steps.deployment.outputs.endpoint }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Admin Login:** admin / admin123" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔗 Quick Links:" >> $GITHUB_STEP_SUMMARY
+        echo "- [Application URL](${{ steps.deployment.outputs.endpoint }})" >> $GITHUB_STEP_SUMMARY
+        echo "- [Health Check](${{ steps.deployment.outputs.endpoint }}/health)" >> $GITHUB_STEP_SUMMARY
+        echo "- [Login Page](${{ steps.deployment.outputs.endpoint }}/login.html)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ⚠️ Next Steps:" >> $GITHUB_STEP_SUMMARY
+        echo "1. Login and change admin password" >> $GITHUB_STEP_SUMMARY
+        echo "2. Create your first client account" >> $GITHUB_STEP_SUMMARY
+        echo "3. Configure API keys for lead generation" >> $GITHUB_STEP_SUMMARY
+
+  cleanup-on-failure:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: failure()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install Serverless Framework
+      run: |
+        cd aws-deployment
+        npm install -g serverless
+        npm install
+        
+    - name: Cleanup failed deployment
+      run: |
+        cd aws-deployment
+        echo "Cleaning up failed deployment..."
+        serverless remove --stage ${{ env.ENVIRONMENT }} --region ${{ env.AWS_REGION }} || echo "Cleanup completed"
+

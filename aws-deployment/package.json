@@ -1,0 +1,46 @@
+{
+  "name": "livewire-leadgen-aws",
+  "version": "1.0.0",
+  "description": "LiveWire Data Solutions - Lead Generation Platform",
+  "main": "wsgi_handler.py",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "deploy:staging": "serverless deploy --stage staging",
+    "remove": "serverless remove",
+    "info": "serverless info",
+    "logs": "serverless logs -f app",
+    "test": "python -m pytest tests/",
+    "local": "serverless wsgi serve"
+  },
+  "keywords": [
+    "lead-generation",
+    "aws",
+    "serverless",
+    "livewire",
+    "b2b",
+    "automation"
+  ],
+  "author": "LiveWire Data Solutions",
+  "license": "MIT",
+  "dependencies": {
+    "serverless": "^3.38.0",
+    "serverless-wsgi": "^3.0.2",
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "devDependencies": {
+    "serverless-offline": "^13.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/livewire-leadgen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/livewire-leadgen/issues"
+  },
+  "homepage": "https://github.com/your-username/livewire-leadgen#readme"
+}
+

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveWire Data Solutions - Lead Generation Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div x-data="automationDashboard()" x-init="init()" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                <img src="/static/livewire_logo.png" alt="LiveWire" class="h-10 mr-3">
+                LiveWire Data Solutions
+            </h1>
+            <p class="text-gray-600">Automated lead generation for Australian B2B consultants</p>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Leads</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="status.total_leads || 0"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-magic text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Auto Generated</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="status.auto_generated_leads || 0"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-campaign text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Active Campaigns</p>
+                        <p class="text-2xl font-semibold text-gray-900" x-text="status.active_campaigns || 0"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full" :class="status.service_available ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
+                        <i class="fas fa-circle text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Service Status</p>
+                        <p class="text-lg font-semibold" :class="status.service_available ? 'text-green-600' : 'text-red-600'" 
+                           x-text="status.service_available ? 'Online' : 'Offline'"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Configuration Status -->
+        <div class="bg-white rounded-lg shadow mb-8 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-cog text-gray-600 mr-2"></i>
+                API Configuration
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center justify-between p-4 border rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-search text-blue-600 mr-3"></i>
+                        <span class="font-medium">Apollo.io API</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-sm font-medium" 
+                          :class="status.apollo_configured ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                          x-text="status.apollo_configured ? 'Configured' : 'Not Configured'"></span>
+                </div>
+                <div class="flex items-center justify-between p-4 border rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-envelope text-orange-600 mr-3"></i>
+                        <span class="font-medium">Hunter.io API</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-sm font-medium" 
+                          :class="status.hunter_configured ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                          x-text="status.hunter_configured ? 'Configured' : 'Not Configured'"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow mb-8 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-bolt text-yellow-600 mr-2"></i>
+                Quick Actions
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button @click="generateLeads()" 
+                        :disabled="loading || !status.apollo_configured"
+                        class="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                    <i class="fas fa-magic mr-2"></i>
+                    <span x-show="!loading">Generate Australian Leads</span>
+                    <span x-show="loading">Generating...</span>
+                </button>
+                
+                <button @click="runAllCampaigns()" 
+                        :disabled="loading || !status.apollo_configured"
+                        class="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                    <i class="fas fa-play mr-2"></i>
+                    <span x-show="!loading">Run All Campaigns</span>
+                    <span x-show="loading">Running...</span>
+                </button>
+                
+                <button @click="testAPIs()" 
+                        :disabled="loading"
+                        class="flex items-center justify-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span x-show="!loading">Test API Connections</span>
+                    <span x-show="loading">Testing...</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Leads -->
+        <div class="bg-white rounded-lg shadow mb-8 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-list text-gray-600 mr-2"></i>
+                    Recent Automated Leads
+                </h2>
+                <button @click="loadLeads()" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-refresh mr-1"></i>
+                    Refresh
+                </button>
+            </div>
+            
+            <div x-show="leads.length === 0" class="text-center py-8 text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-4"></i>
+                <p>No automated leads found. Generate some leads to get started!</p>
+            </div>
+            
+            <div x-show="leads.length > 0" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="lead in leads" :key="lead.id">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                <span class="text-blue-600 font-medium" x-text="(lead.first_name?.[0] || '') + (lead.last_name?.[0] || '')"></span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900" x-text="lead.first_name + ' ' + lead.last_name"></div>
+                                            <div class="text-sm text-gray-500" x-text="lead.email"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900" x-text="lead.company"></div>
+                                    <div class="text-sm text-gray-500" x-text="lead.title"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="text-sm font-medium text-gray-900" x-text="lead.score"></div>
+                                        <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="h-2 rounded-full" 
+                                                 :class="lead.score >= 80 ? 'bg-green-500' : lead.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'"
+                                                 :style="`width: ${lead.score}%`"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                          :class="getStatusColor(lead.status)"
+                                          x-text="lead.status"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="lead.source"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(lead.created_at)"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Campaigns -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-campaign text-gray-600 mr-2"></i>
+                    Lead Generation Campaigns
+                </h2>
+                <button @click="showCreateCampaign = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i>
+                    New Campaign
+                </button>
+            </div>
+            
+            <div x-show="campaigns.length === 0" class="text-center py-8 text-gray-500">
+                <i class="fas fa-bullhorn text-4xl mb-4"></i>
+                <p>No campaigns found. Create your first campaign to start automated lead generation!</p>
+            </div>
+            
+            <div x-show="campaigns.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="campaign in campaigns" :key="campaign.id">
+                    <div class="border rounded-lg p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900" x-text="campaign.name"></h3>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                  :class="campaign.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                                  x-text="campaign.status"></span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4" x-text="campaign.description"></p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Progress:</span>
+                                <span class="font-medium" x-text="`${campaign.leads_generated}/${campaign.leads_target}`"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" 
+                                     :style="`width: ${Math.min((campaign.leads_generated / campaign.leads_target) * 100, 100)}%`"></div>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Industry:</span>
+                                <span x-text="campaign.target_industry || 'Any'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Location:</span>
+                                <span x-text="campaign.target_location || 'Any'"></span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button @click="runCampaign(campaign.id)" 
+                                    :disabled="loading || campaign.status !== 'active'"
+                                    class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 disabled:bg-gray-400">
+                                <i class="fas fa-play mr-1"></i>
+                                Run
+                            </button>
+                            <button class="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div x-show="message" 
+             x-transition
+             class="fixed bottom-4 right-4 max-w-sm bg-white border border-gray-200 rounded-lg shadow-lg p-4"
+             :class="messageType === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'">
+            <div class="flex items-center">
+                <i class="fas" :class="messageType === 'error' ? 'fa-exclamation-circle text-red-600' : 'fa-check-circle text-green-600'"></i>
+                <p class="ml-3 text-sm" :class="messageType === 'error' ? 'text-red-800' : 'text-green-800'" x-text="message"></p>
+                <button @click="message = ''" class="ml-auto text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function automationDashboard() {
+            return {
+                status: {},
+                leads: [],
+                campaigns: [],
+                loading: false,
+                message: '',
+                messageType: 'success',
+                showCreateCampaign: false,
+
+                async init() {
+                    await this.loadStatus();
+                    await this.loadLeads();
+                    await this.loadCampaigns();
+                },
+
+                async loadStatus() {
+                    try {
+                        const response = await fetch('/api/automation/status');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.status = data.status;
+                        }
+                    } catch (error) {
+                        console.error('Error loading status:', error);
+                    }
+                },
+
+                async loadLeads() {
+                    try {
+                        const response = await fetch('/api/automation/leads?per_page=10');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.leads = data.leads;
+                        }
+                    } catch (error) {
+                        console.error('Error loading leads:', error);
+                    }
+                },
+
+                async loadCampaigns() {
+                    try {
+                        const response = await fetch('/api/automation/campaigns');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.campaigns = data.campaigns;
+                        }
+                    } catch (error) {
+                        console.error('Error loading campaigns:', error);
+                    }
+                },
+
+                async generateLeads() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/automation/generate-leads', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                max_leads: 25,
+                                type: 'australian_consultants'
+                            })
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.showMessage(`Generated ${data.total_leads_saved} new leads!`, 'success');
+                            await this.loadStatus();
+                            await this.loadLeads();
+                        } else {
+                            this.showMessage(data.error || 'Failed to generate leads', 'error');
+                        }
+                    } catch (error) {
+                        this.showMessage('Error generating leads: ' + error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async runAllCampaigns() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/automation/run-all-campaigns', {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            const totalLeads = data.results.reduce((sum, r) => sum + (r.leads_generated || 0), 0);
+                            this.showMessage(`Ran ${data.successful_campaigns} campaigns, generated ${totalLeads} leads!`, 'success');
+                            await this.loadStatus();
+                            await this.loadLeads();
+                            await this.loadCampaigns();
+                        } else {
+                            this.showMessage(data.error || 'Failed to run campaigns', 'error');
+                        }
+                    } catch (error) {
+                        this.showMessage('Error running campaigns: ' + error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async runCampaign(campaignId) {
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/api/automation/campaigns/${campaignId}/run`, {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.showMessage(`Campaign generated ${data.leads_generated} leads!`, 'success');
+                            await this.loadStatus();
+                            await this.loadLeads();
+                            await this.loadCampaigns();
+                        } else {
+                            this.showMessage(data.error || 'Failed to run campaign', 'error');
+                        }
+                    } catch (error) {
+                        this.showMessage('Error running campaign: ' + error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async testAPIs() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/automation/test-apis', {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            const tests = data.api_tests;
+                            let message = 'API Tests: ';
+                            if (tests.apollo) message += 'Apollo ✓ ';
+                            if (tests.hunter) message += 'Hunter ✓ ';
+                            if (tests.errors.length > 0) {
+                                message += `Errors: ${tests.errors.join(', ')}`;
+                                this.showMessage(message, 'error');
+                            } else {
+                                this.showMessage(message || 'All APIs working!', 'success');
+                            }
+                        } else {
+                            this.showMessage(data.error || 'Failed to test APIs', 'error');
+                        }
+                    } catch (error) {
+                        this.showMessage('Error testing APIs: ' + error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                showMessage(text, type = 'success') {
+                    this.message = text;
+                    this.messageType = type;
+                    setTimeout(() => {
+                        this.message = '';
+                    }, 5000);
+                },
+
+                getStatusColor(status) {
+                    const colors = {
+                        'new': 'bg-blue-100 text-blue-800',
+                        'contacted': 'bg-yellow-100 text-yellow-800',
+                        'qualified': 'bg-green-100 text-green-800',
+                        'converted': 'bg-purple-100 text-purple-800',
+                        'lost': 'bg-red-100 text-red-800'
+                    };
+                    return colors[status] || 'bg-gray-100 text-gray-800';
+                },
+
+                formatDate(dateString) {
+                    return new Date(dateString).toLocaleDateString();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveWire Data Solutions - Client Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-online { background: #10b981; }
+        .status-offline { background: #ef4444; }
+
+        .api-config {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .api-config h3 {
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .api-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .api-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #e1e5e9;
+        }
+
+        .api-item.configured {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .api-item.not-configured {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .action-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.secondary {
+            background: #6b7280;
+        }
+
+        .btn.success {
+            background: #10b981;
+        }
+
+        .recent-leads {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .recent-leads h3 {
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .leads-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leads-table th,
+        .leads-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .leads-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .score-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .score-high { background: #10b981; }
+        .score-medium { background: #f59e0b; }
+        .score-low { background: #ef4444; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #16a34a;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .leads-table {
+                font-size: 14px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>
+                <img src="/static/livewire_logo.png" alt="LiveWire" style="height: 40px; margin-right: 15px; filter: brightness(0) invert(1); vertical-align: middle;">
+                LiveWire Dashboard
+            </h1>
+            <div class="user-info">
+                <span class="user-name" id="userName">Loading...</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <p class="subtitle" id="subtitle">Your personalized lead generation portal</p>
+
+        <div id="errorContainer"></div>
+        <div id="successContainer"></div>
+
+        <!-- Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number" id="totalLeads">-</div>
+                <div class="stat-label">My Leads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✨</div>
+                <div class="stat-number" id="autoGenerated">-</div>
+                <div class="stat-label">Auto Generated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-number" id="activeCampaigns">-</div>
+                <div class="stat-label">Active Campaigns</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔧</div>
+                <div class="stat-label">Service Status</div>
+                <div class="stat-number" style="font-size: 18px;">
+                    Online<span class="status-indicator status-online"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Configuration -->
+        <div class="api-config">
+            <h3>⚙️ Your API Configuration</h3>
+            <div class="api-status" id="apiStatus">
+                <div class="api-item" id="apolloStatus">
+                    <span>🔍 Apollo.io API</span>
+                    <span>Not Configured</span>
+                </div>
+                <div class="api-item" id="hunterStatus">
+                    <span>📧 Hunter.io API</span>
+                    <span>Not Configured</span>
+                </div>
+                <div class="api-item" id="linkedinStatus">
+                    <span>💼 LinkedIn API</span>
+                    <span>Not Connected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions">
+            <div class="action-card">
+                <h3>⚡ Lead Generation</h3>
+                <button class="btn" id="generateBtn" onclick="generateLeads()">
+                    🎯 Generate Australian Leads
+                </button>
+                <button class="btn secondary" onclick="linkedinSearch()">
+                    💼 Search LinkedIn
+                </button>
+                <button class="btn success" onclick="testAPIs()">
+                    🧪 Test My API Connections
+                </button>
+            </div>
+            
+            <div class="action-card">
+                <h3>📈 Campaign Management</h3>
+                <button class="btn" onclick="viewCampaigns()">
+                    📋 View My Campaigns
+                </button>
+                <button class="btn secondary" onclick="createCampaign()">
+                    ➕ New Campaign
+                </button>
+                <button class="btn" onclick="viewAllLeads()">
+                    👥 View All My Leads
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Leads -->
+        <div class="recent-leads">
+            <h3>
+                📋 My Recent Leads
+                <button class="btn" style="width: auto; padding: 8px 16px; font-size: 14px;" onclick="refreshLeads()">
+                    🔄 Refresh
+                </button>
+            </h3>
+            <div id="leadsContainer">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = window.location.origin;
+        let currentClient = null;
+
+        // Authentication check
+        function checkAuth() {
+            const sessionToken = localStorage.getItem('session_token');
+            if (!sessionToken) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return sessionToken;
+        }
+
+        // API request helper with authentication
+        async function apiRequest(endpoint, options = {}) {
+            const sessionToken = checkAuth();
+            if (!sessionToken) return null;
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const response = await fetch(`${API_BASE}${endpoint}`, {
+                ...defaultOptions,
+                ...options,
+                headers: { ...defaultOptions.headers, ...options.headers }
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('session_token');
+                localStorage.removeItem('client_data');
+                window.location.href = '/login.html';
+                return null;
+            }
+
+            return response;
+        }
+
+        // Load user profile
+        async function loadProfile() {
+            try {
+                const response = await apiRequest('/api/auth/profile');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    currentClient = data.client;
+                    document.getElementById('userName').textContent = 
+                        `${currentClient.contact_name || currentClient.username} (${currentClient.company_name || 'Individual'})`;
+                    
+                    // Update subtitle for admin users
+                    if (currentClient.is_admin) {
+                        document.getElementById('subtitle').textContent = 
+                            'Admin Dashboard - Manage all clients and system settings';
+                    } else {
+                        document.getElementById('subtitle').textContent = 
+                            `Welcome ${currentClient.contact_name || currentClient.username}! Your personalized lead generation portal`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const response = await apiRequest('/api/automation/status');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    
+                    // Update statistics
+                    const stats = data.statistics;
+                    document.getElementById('totalLeads').textContent = stats.my_leads || 0;
+                    document.getElementById('autoGenerated').textContent = stats.my_auto_generated || 0;
+                    document.getElementById('activeCampaigns').textContent = stats.my_active_campaigns || 0;
+                    
+                    // Update API status
+                    updateAPIStatus(data.api_status);
+                    
+                    // Load recent leads
+                    displayRecentLeads(data.recent_leads || []);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        // Update API status display
+        function updateAPIStatus(apiStatus) {
+            const apolloEl = document.getElementById('apolloStatus');
+            const hunterEl = document.getElementById('hunterStatus');
+            const linkedinEl = document.getElementById('linkedinStatus');
+
+            // Apollo status
+            if (apiStatus.apollo_configured) {
+                apolloEl.className = 'api-item configured';
+                apolloEl.querySelector('span:last-child').textContent = 'Configured ✅';
+            } else {
+                apolloEl.className = 'api-item not-configured';
+                apolloEl.querySelector('span:last-child').textContent = 'Not Configured ❌';
+            }
+
+            // Hunter status
+            if (apiStatus.hunter_configured) {
+                hunterEl.className = 'api-item configured';
+                hunterEl.querySelector('span:last-child').textContent = 'Configured ✅';
+            } else {
+                hunterEl.className = 'api-item not-configured';
+                hunterEl.querySelector('span:last-child').textContent = 'Not Configured ❌';
+            }
+
+            // LinkedIn status
+            if (apiStatus.linkedin_configured) {
+                linkedinEl.className = 'api-item configured';
+                linkedinEl.querySelector('span:last-child').textContent = 'Connected ✅';
+            } else {
+                linkedinEl.className = 'api-item not-configured';
+                linkedinEl.querySelector('span:last-child').textContent = 'Not Connected ❌';
+            }
+        }
+
+        // Display recent leads
+        function displayRecentLeads(leads) {
+            const container = document.getElementById('leadsContainer');
+            
+            if (leads.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                        <p>No leads found yet. Generate some leads to get started!</p>
+                        <p style="margin-top: 10px; color: #888;">Your leads are private and only visible to you.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const table = `
+                <table class="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Title</th>
+                            <th>Score</th>
+                            <th>Source</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${leads.map(lead => `
+                            <tr>
+                                <td>${lead.full_name || `${lead.first_name} ${lead.last_name}`}</td>
+                                <td>${lead.company || '-'}</td>
+                                <td>${lead.title || '-'}</td>
+                                <td>
+                                    <span class="score-badge ${getScoreClass(lead.score)}">
+                                        ${lead.score || 0}
+                                    </span>
+                                </td>
+                                <td>${lead.source || '-'}</td>
+                                <td>${new Date(lead.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+        }
+
+        // Get score class for styling
+        function getScoreClass(score) {
+            if (score >= 80) return 'score-high';
+            if (score >= 60) return 'score-medium';
+            return 'score-low';
+        }
+
+        // Generate leads
+        async function generateLeads() {
+            const btn = document.getElementById('generateBtn');
+            const originalText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            try {
+                const response = await apiRequest('/api/automation/generate-leads', {
+                    method: 'POST',
+                    body: JSON.stringify({ count: 25 })
+                });
+                
+                if (response && response.ok) {
+                    const data = await response.json();
+                    showSuccess(`Generated ${data.leads_generated} leads successfully! Remaining quota: ${data.remaining_quota}`);
+                    loadDashboard(); // Refresh dashboard
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to generate leads');
+                }
+            } catch (error) {
+                console.error('Error generating leads:', error);
+                showError('Network error while generating leads');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // LinkedIn search
+        async function linkedinSearch() {
+            try {
+                const keywords = prompt('Enter search keywords (e.g., "consulting, corporate wellness"):');
+                if (!keywords) return;
+                
+                const response = await apiRequest('/api/automation/linkedin/search', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        keywords: keywords.split(',').map(k => k.trim()),
+                        count: 10 
+                    })
+                });
+                
+                if (response && response.ok) {
+                    const data = await response.json();
+                    showSuccess(`Found ${data.leads_generated} LinkedIn leads!`);
+                    loadDashboard();
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'LinkedIn search failed');
+                }
+            } catch (error) {
+                console.error('Error with LinkedIn search:', error);
+                showError('Network error during LinkedIn search');
+            }
+        }
+
+        // Test APIs
+        async function testAPIs() {
+            try {
+                const response = await apiRequest('/api/automation/test-apis', {
+                    method: 'POST'
+                });
+                
+                if (response && response.ok) {
+                    const data = await response.json();
+                    const results = data.api_tests;
+                    
+                    let message = 'Your API Test Results:\n\n';
+                    message += `Apollo: ${results.apollo.working ? '✅' : '❌'} ${results.apollo.message}\n`;
+                    message += `Hunter: ${results.hunter.working ? '✅' : '❌'} ${results.hunter.message}\n`;
+                    message += `LinkedIn: ${results.linkedin.working ? '✅' : '❌'} ${results.linkedin.message}`;
+                    
+                    alert(message);
+                } else {
+                    showError('Failed to test API connections');
+                }
+            } catch (error) {
+                console.error('Error testing APIs:', error);
+                showError('Network error while testing APIs');
+            }
+        }
+
+        // Refresh leads
+        function refreshLeads() {
+            document.getElementById('leadsContainer').innerHTML = '<div class="loading"></div>';
+            loadDashboard();
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await apiRequest('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('session_token');
+                localStorage.removeItem('client_data');
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Utility functions
+        function showError(message) {
+            const container = document.getElementById('errorContainer');
+            container.innerHTML = `<div class="error-message">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function showSuccess(message) {
+            const container = document.getElementById('successContainer');
+            container.innerHTML = `<div class="success-message">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        // Placeholder functions
+        function viewCampaigns() {
+            showError('Campaign management coming soon!');
+        }
+
+        function createCampaign() {
+            showError('Campaign creation coming soon!');
+        }
+
+        function viewAllLeads() {
+            showError('Full lead management coming soon!');
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!checkAuth()) return;
+            
+            await loadProfile();
+            await loadDashboard();
+        });
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (checkAuth()) {
+                loadDashboard();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
+
