@@ -12,8 +12,7 @@ provider:
   environment:
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
-    DATABASE_URL: ${self:custom.databaseUrl}
-    SECRET_KEY: ${self:custom.secretKey}
+    SECRET_KEY: ${env:SECRET_KEY, 'leadai-secret-key-change-in-production'}
     CORS_ORIGINS: "*"
     
   # IAM permissions
@@ -31,27 +30,19 @@ provider:
             - dynamodb:BatchGetItem
             - dynamodb:BatchWriteItem
           Resource:
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tableName}"
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tableName}/index/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/leadai-${self:provider.stage}-*"
         - Effect: Allow
           Action:
             - s3:GetObject
             - s3:PutObject
             - s3:DeleteObject
           Resource:
-            - "arn:aws:s3:::${self:custom.bucketName}/*"
-        - Effect: Allow
-          Action:
-            - ses:SendEmail
-            - ses:SendRawEmail
-          Resource: "*"
+            - "arn:aws:s3:::leadai-storage-${self:provider.stage}/*"
 
 # Custom variables
 custom:
   tableName: leadai-${self:provider.stage}
   bucketName: leadai-storage-${self:provider.stage}
-  secretKey: ${env:SECRET_KEY, 'leadai-secret-key-change-in-production'}
-  databaseUrl: ${env:DATABASE_URL, 'sqlite:///tmp/app.db'}
   
   # Serverless plugins
   wsgi:
@@ -104,7 +95,7 @@ resources:
     ClientsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.tableName}-clients
+        TableName: leadai-${self:provider.stage}-clients
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: id
@@ -144,7 +135,7 @@ resources:
     LeadsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.tableName}-leads
+        TableName: leadai-${self:provider.stage}-leads
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: id
@@ -188,7 +179,7 @@ resources:
     CampaignsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.tableName}-campaigns
+        TableName: leadai-${self:provider.stage}-campaigns
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: id
@@ -225,7 +216,7 @@ resources:
     StorageBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.bucketName}
+        BucketName: leadai-storage-${self:provider.stage}
         BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
@@ -252,21 +243,8 @@ resources:
     AppLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
-        LogGroupName: /aws/lambda/${self:service}-${self:provider.stage}-app
+        LogGroupName: /aws/lambda/leadai-automation-${self:provider.stage}-app
         RetentionInDays: 14
-
-    # API Gateway Custom Domain (optional)
-    ApiGatewayCustomDomain:
-      Type: AWS::ApiGateway::DomainName
-      Condition: HasCustomDomain
-      Properties:
-        DomainName: ${self:custom.customDomain}
-        CertificateArn: ${self:custom.certificateArn}
-        SecurityPolicy: TLS_1_2
-
-# Conditions
-Conditions:
-  HasCustomDomain: !Not [!Equals [${self:custom.customDomain, ''}, '']]
 
 # Plugins
 plugins:
