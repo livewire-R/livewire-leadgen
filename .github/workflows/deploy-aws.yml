@@ -60,7 +60,7 @@ jobs:
     - name: Install Serverless Framework
       run: |
         cd aws-deployment
-        npm install -g serverless
+        npm install -g serverless@3.38.0
         npm install
         
     - name: Install Python dependencies
@@ -133,7 +133,7 @@ jobs:
     - name: Install Serverless Framework
       run: |
         cd aws-deployment
-        npm install -g serverless
+        npm install -g serverless@3.38.0
         npm install
         
     - name: Cleanup failed deployment
