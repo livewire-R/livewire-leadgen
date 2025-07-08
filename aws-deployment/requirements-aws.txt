@@ -11,7 +11,7 @@ botocore==1.31.85
 
 # API integrations
 requests==2.31.0
-urllib3==2.0.7
+urllib3>=1.25.4,<1.27
 
 # Authentication and security
 PyJWT==2.8.0
